@@ -2,6 +2,7 @@ package com.lakshman.user_auth.interceptor;
 
 import com.lakshman.user_auth.entity.RequestAudit;
 import com.lakshman.user_auth.service.RequestAuditService;
+import com.lakshman.user_auth.service.RequestAuditServiceImpl;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Component;
@@ -16,7 +17,7 @@ public class RequestAuditInterceptor implements HandlerInterceptor {
     
     private final RequestAuditService requestAuditService;
     
-    public RequestAuditInterceptor(RequestAuditService requestAuditService) {
+    public RequestAuditInterceptor(RequestAuditServiceImpl requestAuditService) {
         this.requestAuditService = requestAuditService;
     }
     
@@ -25,7 +26,9 @@ public class RequestAuditInterceptor implements HandlerInterceptor {
         request.setAttribute("startTime", System.currentTimeMillis());
         return true;
     }
-    
+
+
+    //TODO make it async
     @Override
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, 
                                Object handler, Exception ex) {
