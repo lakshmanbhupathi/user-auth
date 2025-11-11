@@ -33,8 +33,8 @@ public class AuthenticationController {
     }
 
     @PostMapping("/verify-signup-otp")
-    public ResponseEntity<AuthResponse> verifySignupOtp(@Valid @RequestBody VerifyOtpRequest request
-            , @PathVariable("ver") String ver) {
+    public ResponseEntity<AuthResponse> verifySignupOtp(@Valid @RequestBody VerifyOtpRequest request,
+                                                        @PathVariable("ver") String ver) {
         try {
             AuthResponse response = authenticationService.verifySignupOtp(request);
             return ResponseEntity.ok(response);

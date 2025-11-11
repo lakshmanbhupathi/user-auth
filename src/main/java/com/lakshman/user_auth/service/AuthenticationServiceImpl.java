@@ -61,7 +61,27 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
+    @Transactional
     public AuthResponse verifySignupOtp(VerifyOtpRequest request) {
-        return null;
+        boolean verified = emailOtpService.verifyOtp(request.getEmail(), request.getOtpCode());
+
+        if (!verified) {
+            log.error("Invalid or expired OTP");
+            throw new RuntimeException("Invalid or expired OTP");
+        }
+
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        log.info("User found: {}", user.getId());
+        user.setEnabled(true);
+        userRepository.save(user);
+        log.info("User enabled: {}", user.getId());
+
+        return new AuthResponse("Email verified successfully. You can now login.",
+                null,
+                false,
+                null);
     }
+
 }

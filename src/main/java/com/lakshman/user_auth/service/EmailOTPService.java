@@ -4,4 +4,5 @@ import com.lakshman.user_auth.entity.User;
 
 public interface EmailOTPService {
     void generateAndSendOtp(String email, User user, String signup);
+    boolean verifyOtp(String email, String otpCode);
 }
