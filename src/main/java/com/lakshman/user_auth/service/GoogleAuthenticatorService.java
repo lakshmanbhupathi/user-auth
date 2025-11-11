@@ -5,7 +5,6 @@ import com.lakshman.user_auth.repository.UserRepository;
 import com.warrenstrange.googleauth.GoogleAuthenticatorKey;
 import com.warrenstrange.googleauth.GoogleAuthenticatorQRGenerator;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,12 +16,15 @@ import java.time.LocalDateTime;
 @Slf4j
 public class GoogleAuthenticatorService {
 
-    @Autowired
     private  UserRepository userRepository;
 
-    @Autowired
     private  com.warrenstrange.googleauth.GoogleAuthenticator gAuth;
-    
+
+    public GoogleAuthenticatorService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+        this.gAuth = new com.warrenstrange.googleauth.GoogleAuthenticator();
+    }
+
     @Value("${gauth.issuer:UserAuthApp}")
     private String issuer;
 
