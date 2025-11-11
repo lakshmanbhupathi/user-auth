@@ -1,6 +1,7 @@
 package com.lakshman.user_auth.service;
 
 import com.lakshman.user_auth.dto.AuthResponse;
+import com.lakshman.user_auth.dto.LoginRequest;
 import com.lakshman.user_auth.dto.SignupRequest;
 import com.lakshman.user_auth.dto.VerifyOtpRequest;
 import com.lakshman.user_auth.entity.User;
@@ -82,6 +83,37 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 null,
                 false,
                 null);
+    }
+
+    @Transactional
+    @Override
+    public AuthResponse login(LoginRequest request) {
+
+        log.info("login request:: {}", request.getUsername());
+
+        final String invalidUsernameOrPasswordMsg = "invalid username or password";
+        User user = userRepository.findByUsername(request.getUsername())
+                .orElseThrow(() -> new RuntimeException(invalidUsernameOrPasswordMsg));
+
+        log.info(" user found :: {}", user.getId());
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            log.error(invalidUsernameOrPasswordMsg);
+            throw new RuntimeException(invalidUsernameOrPasswordMsg);
+        }
+
+        if (!user.getEnabled()) {
+            final String msg = "Account not verified. Please verify your email.";
+            log.error(msg);
+            throw new RuntimeException(msg);
+        }
+
+        // Send OTP for login
+        emailOtpService.generateAndSendOtp(user.getEmail(), user, "login");
+        log.info("OTP sent  to email :: {}", user.getEmail());
+        return new AuthResponse("OTP sent to your email. Please verify.",
+                null,
+                false,
+                user.getEmail());
     }
 
 }
