@@ -98,4 +98,11 @@ Two test users are automatically created on startup:
 3. Scan QR code with Google Authenticator app
 4. **POST** `/api/auth/enable-gauth?code=<6-digit-code>` - Verify and enable GAuth
 
+### TODO
+- Migrate Flyway instead of CommandLineRunner
+- Async RequestAudit and SessionHistory 
+- Move Schedular properties to configurable
+- [low] Break-up AuthenticationController and AuthenticationService
+- Mock OTP into Email Integration
+- Tests
 
