@@ -1,0 +1,408 @@
+{
+	"info": {
+		"_postman_id": "14b7c310-e0cc-40ae-b27b-532621a4f7a4",
+		"name": "User Auth with 2FA Ver",
+		"description": "Complete authentication system with Email OTP and Google Authenticator 2FA.\n\n## Test Credentials\nAfter running the application, you can create test users using the signup flow.\n\n### Sample Test User 1:\n- Username: testuser1\n- Email: test1@example.com\n- Password: Test123!\n\n### Sample Test User 2:\n- Username: testuser2\n- Email: test2@example.com\n- Password: Test123!\n\n## Setup Instructions\n1. Start the application using Docker Compose: `docker-compose up`\n2. Use the Signup flow to create a new user\n3. Check the console logs for the OTP code\n4. Verify the signup OTP\n5. Login with the created user\n6. (Optional) Setup Google Authenticator for additional 2FA\n\n## Variables\n- base_url: http://localhost:8080\n- session_token: Will be set automatically after login",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "48687898",
+		"_collection_link": "https://lakshmanbhupathi-5547982.postman.co/workspace/lakshman-bhupathi's-Workspace~a11b2bd7-1e18-4acc-8265-5d66b152f2c1/collection/48687898-14b7c310-e0cc-40ae-b27b-532621a4f7a4?action=share&source=collection_link&creator=48687898"
+	},
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "1. Signup",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"testuser3\",\n  \"email\": \"test3@example.com\",\n  \"password\": \"Test123!\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/signup",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"signup"
+							]
+						},
+						"description": "Register a new user. Email OTP will be sent (check console logs)."
+					},
+					"response": []
+				},
+				{
+					"name": "2. Verify Signup OTP",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"test3@example.com\",\n  \"otpCode\": \"153923\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/verify-signup-otp",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"verify-signup-otp"
+							]
+						},
+						"description": "Verify the OTP sent during signup. Replace otpCode with the actual code from console logs."
+					},
+					"response": []
+				},
+				{
+					"name": "3. Login",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"testuser3\",\n  \"password\": \"Test123!\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						},
+						"description": "Login with username and password. Email OTP will be sent (check console logs)."
+					},
+					"response": []
+				},
+				{
+					"name": "4. Verify Login OTP",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.token) {",
+									"        pm.environment.set(\"session_token\", jsonData.token);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"test3@example.com\",\n  \"otpCode\": \"956957\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/verify-login-otp",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"verify-login-otp"
+							]
+						},
+						"description": "Verify the OTP sent during login. If GAuth is not enabled, this returns the session token. Token is automatically saved to environment variable."
+					},
+					"response": []
+				},
+				{
+					"name": "5. Setup Google Authenticator",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{session_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/auth/setup-gauth",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"setup-gauth"
+							]
+						},
+						"description": "Setup Google Authenticator. Returns QR code URL and secret key. Scan the QR code with Google Authenticator app."
+					},
+					"response": []
+				},
+				{
+					"name": "6. Enable Google Authenticator",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{session_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/auth/enable-gauth?code=663610",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"enable-gauth"
+							],
+							"query": [
+								{
+									"key": "code",
+									"value": "663610",
+									"description": "6-digit code from Google Authenticator app"
+								}
+							]
+						},
+						"description": "Verify and enable Google Authenticator using the 6-digit code from the app. Once enabled, you'll need both email OTP and GAuth code for login."
+					},
+					"response": []
+				},
+				{
+					"name": "7. Verify Google Authenticator (Login)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.token) {",
+									"        pm.environment.set(\"session_token\", jsonData.token);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"test3@example.com\",\n  \"code\": \"169412\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/verify-gauth",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"verify-gauth"
+							]
+						},
+						"description": "Verify Google Authenticator code during login (only required if GAuth is enabled for the user). Token is automatically saved to environment variable."
+					},
+					"response": []
+				},
+				{
+					"name": "8. Logout",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{session_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/auth/logout",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"logout"
+							]
+						},
+						"description": "Logout and invalidate the current session."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "User Profile",
+			"item": [
+				{
+					"name": "Get Profile",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{session_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/users/profile",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"users",
+								"profile"
+							]
+						},
+						"description": "Get the current user's profile information. Requires authentication."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Profile",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{session_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"firstName\": \"Test3\",\n  \"lastName\": \"User\",\n  \"phone\": \"+91234567890\",\n  \"address\": \"4rd Main St\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/users/profile",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"users",
+								"profile"
+							]
+						},
+						"description": "Update the current user's profile information. Requires authentication."
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8080/v1/"
+		},
+		{
+			"key": "session_token",
+			"value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI0Iiwic2Vzc2lvbklkIjo2LCJpYXQiOjE3NjI4ODg5MzUsImV4cCI6MTc2Mjk3NTMzNX0.12CjHnY5YRtj5lNIfstnRVgE7MUurlIQCBmCVYBMfb_FoOcSAgagQZ7IBYq1VOLu8ihFgrOgQ-xvBMVlXj5NsQ"
+		}
+	]
+}
