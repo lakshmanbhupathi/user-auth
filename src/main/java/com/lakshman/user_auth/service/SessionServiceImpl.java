@@ -2,8 +2,11 @@ package com.lakshman.user_auth.service;
 
 import com.lakshman.user_auth.entity.Session;
 import com.lakshman.user_auth.entity.SessionHistory;
+import com.lakshman.user_auth.entity.User;
+import com.lakshman.user_auth.filter.JwtTokenProvider;
 import com.lakshman.user_auth.repository.SessionHistoryRepository;
 import com.lakshman.user_auth.repository.SessionRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,8 +26,35 @@ public class SessionServiceImpl implements SessionService {
     @Autowired
     private SessionHistoryRepository sessionHistoryRepository;
 
+    @Autowired
+    private JwtTokenProvider jwtTokenProvider;
+
     @Value("${session.timeout.minutes:30}")
     private int sessionTimeoutMinutes;
+
+    @Override
+    @Transactional
+    public String createSession(User user, HttpServletRequest request) {
+        log.info("Creating session for user {} and ip address {}", user.getId(), getClientIP(request));
+        Session session = Session.builder()
+                .user(user)
+                .createdAt(LocalDateTime.now())
+                .lastAccessedAt(LocalDateTime.now())
+                .expiresAt(LocalDateTime.now().plusMinutes(sessionTimeoutMinutes))
+                .isActive(true)
+                .ipAddress(getClientIP(request))
+                .userAgent(request.getHeader("User-Agent"))
+                .build();
+        session = sessionRepository.save(session);
+        log.info("Session saved: {}", session.getId());
+
+        // Generate JWT token
+        String token = jwtTokenProvider.generateToken(user.getId(), session.getId());
+        session.setSessionToken(token);
+        sessionRepository.save(session);
+        log.info("Session token generated: {}", token);
+        return token;
+    }
 
     @Override
     @Transactional
@@ -69,5 +99,14 @@ public class SessionServiceImpl implements SessionService {
 
         sessionHistoryRepository.save(history);
         log.info("Session history saved: {}", history.getId());
+    }
+
+    private String getClientIP(HttpServletRequest request) {
+        log.info("Getting client IP: {}", request.getRemoteAddr());
+        String xfHeader = request.getHeader("X-Forwarded-For");
+        if (xfHeader == null) {
+            return request.getRemoteAddr();
+        }
+        return xfHeader.split(",")[0];
     }
 }
