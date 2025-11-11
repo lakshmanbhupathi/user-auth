@@ -77,4 +77,12 @@ public class EmailOTPServiceImpl implements EmailOTPService{
         return String.valueOf(otp);
     }
 
+    @Transactional
+    @Override
+    public void cleanupExpiredOtps() {
+        log.info("Cleaning up expired OTPs");
+        emailOtpRepository.deleteByExpiresAtBefore(LocalDateTime.now());
+        log.info("Expired OTPs cleaned up");
+    }
+
 }

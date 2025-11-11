@@ -6,10 +6,12 @@ import com.lakshman.user_auth.repository.SessionHistoryRepository;
 import com.lakshman.user_auth.repository.SessionRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -21,16 +23,34 @@ public class SessionServiceImpl implements SessionService {
     @Autowired
     private SessionHistoryRepository sessionHistoryRepository;
 
+    @Value("${session.timeout.minutes:30}")
+    private int sessionTimeoutMinutes;
+
     @Override
     @Transactional
     public void invalidateSession(final String token) {
         log.info("Invalidating session: {}", token);
         Session session = sessionRepository.findBySessionToken(token)
                 .orElseThrow(() -> new RuntimeException("Session not found"));
-        log.info("Session found: {}", session.getId());
+        log.info("Session found:: {}", session.getId());
         moveToHistory(session, "logout");
         sessionRepository.delete(session);
-        log.info("Session deleted: {}", session.getId());
+        log.info("session deleted:: {}", session.getId());
+    }
+
+    @Override
+    @Transactional
+    public void cleanupExpiredSessions() {
+        LocalDateTime cutoffTime = LocalDateTime.now().minusMinutes(sessionTimeoutMinutes);
+        List<Session> expiredSessions = sessionRepository.findByLastAccessedAtBeforeAndIsActiveTrue(cutoffTime);
+        log.info("Found {} expired sessions", expiredSessions.size());
+        for (Session session : expiredSessions) {
+            moveToHistory(session, "timeout");
+            sessionRepository.delete(session);
+            log.info("Session deleted: {}", session.getId());
+        }
+        log.info("Cleaned up {} expired sessions", expiredSessions.size());
+        System.out.println("Cleaned up " + expiredSessions.size() + " expired sessions");
     }
 
     private void moveToHistory(Session session, final String reason) {
