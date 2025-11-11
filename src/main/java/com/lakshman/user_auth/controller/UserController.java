@@ -7,13 +7,14 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/api/{ver}/users")
 public class UserController {
 
     @Autowired
@@ -21,7 +22,8 @@ public class UserController {
 
 
     @GetMapping("/profile")
-    public ResponseEntity<?> getProfile(HttpServletRequest request) {
+    public ResponseEntity<?> getProfile(HttpServletRequest request,
+                                        @PathVariable("ver") String ver) {
         try {
             Long userId = (Long) request.getAttribute("userId");
             if (userId == null) {
@@ -38,7 +40,8 @@ public class UserController {
 
     @PutMapping("/profile")
     public ResponseEntity<?> updateProfile(@RequestBody UpdateProfileRequest updateRequest,
-                                           HttpServletRequest request) {
+                                           HttpServletRequest request,
+                                           @PathVariable("ver") String ver) {
         try {
             Long userId = (Long) request.getAttribute("userId");
             if (userId == null) {
