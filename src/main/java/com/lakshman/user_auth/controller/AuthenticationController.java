@@ -2,8 +2,10 @@ package com.lakshman.user_auth.controller;
 
 import com.lakshman.user_auth.dto.ApiResponse;
 import com.lakshman.user_auth.dto.AuthResponse;
+import com.lakshman.user_auth.dto.GAuthSetupResponse;
 import com.lakshman.user_auth.dto.LoginRequest;
 import com.lakshman.user_auth.dto.SignupRequest;
+import com.lakshman.user_auth.dto.VerifyGAuthRequest;
 import com.lakshman.user_auth.dto.VerifyOtpRequest;
 import com.lakshman.user_auth.service.AuthenticationService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -15,6 +17,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
@@ -60,7 +63,8 @@ public class AuthenticationController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request,
+                                              @PathVariable("ver") String ver) {
         log.info("Login request: {}", request.getUsername());
         try {
             AuthResponse response = authenticationService.login(request);
@@ -77,7 +81,8 @@ public class AuthenticationController {
 
     @PostMapping("/verify-login-otp")
     public ResponseEntity<AuthResponse> verifyLoginOtp(@Valid @RequestBody VerifyOtpRequest request,
-                                                       HttpServletRequest httpRequest) {
+                                                       HttpServletRequest httpRequest,
+                                                       @PathVariable("ver") String ver) {
         log.info("Verify login OTP request: {}", request.getEmail());
         try {
             AuthResponse response = authenticationService.verifyLoginOtp(request, httpRequest);
@@ -90,7 +95,8 @@ public class AuthenticationController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<ApiResponse> logout(HttpServletRequest request) {
+    public ResponseEntity<ApiResponse> logout(HttpServletRequest request,
+                                              @PathVariable("ver") String ver) {
         log.info("Logout request");
         try {
             String authHeader = request.getHeader("Authorization");
@@ -104,6 +110,63 @@ public class AuthenticationController {
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             log.error("Logout error: {}", e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body(new ApiResponse(e.getMessage(), false));
+        }
+    }
+
+    @PostMapping("/verify-gauth")
+    public ResponseEntity<AuthResponse> verifyGAuth(@Valid @RequestBody VerifyGAuthRequest request,
+                                                    HttpServletRequest httpRequest,
+                                                    @PathVariable("ver") String ver) {
+
+        log.info("Verify GAuth request: {}", request.getEmail());
+        try {
+            AuthResponse response = authenticationService.verifyGAuth(request, httpRequest);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Verify GAuth error: {}", e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body(new AuthResponse(e.getMessage(), null, false, null));
+        }
+    }
+
+    @PostMapping("/setup-gauth")
+    public ResponseEntity<GAuthSetupResponse> setupGAuth(HttpServletRequest request,
+                                                         @PathVariable("ver") String ver) {
+        log.info("Setup GAuth request");
+        try {
+            Long userId = (Long) request.getAttribute("userId");
+            if (userId == null) {
+                return ResponseEntity.status(401)
+                        .body(new GAuthSetupResponse("Unauthorized", null, null));
+            }
+
+            GAuthSetupResponse response = authenticationService.setupGAuth(userId);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Setup GAuth error: {}", e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body(new GAuthSetupResponse(e.getMessage(), null, null));
+        }
+    }
+
+    @PostMapping("/enable-gauth")
+    public ResponseEntity<ApiResponse> enableGAuth(@RequestParam String code,
+                                                   HttpServletRequest request,
+                                                   @PathVariable("ver") String ver) {
+        log.info("Enable GAuth request: {}", code);
+        try {
+            Long userId = (Long) request.getAttribute("userId");
+            if (userId == null) {
+                return ResponseEntity.status(401)
+                        .body(new ApiResponse("Unauthorized", false));
+            }
+
+            ApiResponse response = authenticationService.enableGAuth(userId, code);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Enable GAuth error: {}", e.getMessage());
             return ResponseEntity.badRequest()
                     .body(new ApiResponse(e.getMessage(), false));
         }
