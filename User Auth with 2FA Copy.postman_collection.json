@@ -1,11 +1,11 @@
 {
 	"info": {
-		"_postman_id": "14b7c310-e0cc-40ae-b27b-532621a4f7a4",
-		"name": "User Auth with 2FA Ver",
+		"_postman_id": "90e198f3-2578-4658-97a6-a1ee0a5440a8",
+		"name": "User Auth with 2FA Copy",
 		"description": "Complete authentication system with Email OTP and Google Authenticator 2FA.\n\n## Test Credentials\nAfter running the application, you can create test users using the signup flow.\n\n### Sample Test User 1:\n- Username: testuser1\n- Email: test1@example.com\n- Password: Test123!\n\n### Sample Test User 2:\n- Username: testuser2\n- Email: test2@example.com\n- Password: Test123!\n\n## Setup Instructions\n1. Start the application using Docker Compose: `docker-compose up`\n2. Use the Signup flow to create a new user\n3. Check the console logs for the OTP code\n4. Verify the signup OTP\n5. Login with the created user\n6. (Optional) Setup Google Authenticator for additional 2FA\n\n## Variables\n- base_url: http://localhost:8080\n- session_token: Will be set automatically after login",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "48687898",
-		"_collection_link": "https://lakshmanbhupathi-5547982.postman.co/workspace/lakshman-bhupathi's-Workspace~a11b2bd7-1e18-4acc-8265-5d66b152f2c1/collection/48687898-14b7c310-e0cc-40ae-b27b-532621a4f7a4?action=share&source=collection_link&creator=48687898"
+		"_collection_link": "https://lakshmanbhupathi-5547982.postman.co/workspace/lakshman-bhupathi's-Workspace~a11b2bd7-1e18-4acc-8265-5d66b152f2c1/collection/48687898-90e198f3-2578-4658-97a6-a1ee0a5440a8?action=share&source=collection_link&creator=48687898"
 	},
 	"item": [
 		{
@@ -23,7 +23,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"username\": \"testuser3\",\n  \"email\": \"test3@example.com\",\n  \"password\": \"Test123!\"\n}"
+							"raw": "{\n  \"username\": \"lakshman\",\n  \"email\": \"lak@example.com\",\n  \"password\": \"Test123!\"\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/api/auth/signup",
@@ -52,7 +52,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"email\": \"test3@example.com\",\n  \"otpCode\": \"153923\"\n}"
+							"raw": "{\n  \"email\": \"lakku@example.com\",\n  \"otpCode\": \"769429\"\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/api/auth/verify-signup-otp",
@@ -81,7 +81,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"username\": \"testuser3\",\n  \"password\": \"Test123!\"\n}"
+							"raw": "{\n  \"username\": \"testuser1\",\n  \"password\": \"Test123!\"\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/api/auth/login",
@@ -112,9 +112,7 @@
 									"    }",
 									"}"
 								],
-								"type": "text/javascript",
-								"packages": {},
-								"requests": {}
+								"type": "text/javascript"
 							}
 						}
 					],
@@ -128,7 +126,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"email\": \"test3@example.com\",\n  \"otpCode\": \"956957\"\n}"
+							"raw": "{\n  \"email\": \"test1@example.com\",\n  \"otpCode\": \"123456\"\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/api/auth/verify-login-otp",
@@ -196,7 +194,7 @@
 						"method": "POST",
 						"header": [],
 						"url": {
-							"raw": "{{base_url}}/api/auth/enable-gauth?code=663610",
+							"raw": "{{base_url}}/api/auth/enable-gauth?code=785063",
 							"host": [
 								"{{base_url}}"
 							],
@@ -208,7 +206,7 @@
 							"query": [
 								{
 									"key": "code",
-									"value": "663610",
+									"value": "785063",
 									"description": "6-digit code from Google Authenticator app"
 								}
 							]
@@ -247,7 +245,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"email\": \"test3@example.com\",\n  \"code\": \"169412\"\n}"
+							"raw": "{\n  \"email\": \"lakku@example.com\",\n  \"code\": \"450985\"\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/api/auth/verify-gauth",
@@ -351,7 +349,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"firstName\": \"Test3\",\n  \"lastName\": \"User\",\n  \"phone\": \"+91234567890\",\n  \"address\": \"4rd Main St\"\n}"
+							"raw": "{\n  \"firstName\": \"Test\",\n  \"lastName\": \"User\",\n  \"phone\": \"+91234567890\",\n  \"address\": \"3rd Main St\"\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/api/users/profile",
@@ -398,11 +396,11 @@
 	"variable": [
 		{
 			"key": "base_url",
-			"value": "http://localhost:8080/v1/"
+			"value": "http://localhost:8080"
 		},
 		{
 			"key": "session_token",
-			"value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI0Iiwic2Vzc2lvbklkIjo2LCJpYXQiOjE3NjI4ODg5MzUsImV4cCI6MTc2Mjk3NTMzNX0.12CjHnY5YRtj5lNIfstnRVgE7MUurlIQCBmCVYBMfb_FoOcSAgagQZ7IBYq1VOLu8ihFgrOgQ-xvBMVlXj5NsQ"
+			"value": ""
 		}
 	]
 }
