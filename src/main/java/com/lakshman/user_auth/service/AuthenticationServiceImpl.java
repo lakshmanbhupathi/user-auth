@@ -2,8 +2,10 @@ package com.lakshman.user_auth.service;
 
 import com.lakshman.user_auth.dto.ApiResponse;
 import com.lakshman.user_auth.dto.AuthResponse;
+import com.lakshman.user_auth.dto.GAuthSetupResponse;
 import com.lakshman.user_auth.dto.LoginRequest;
 import com.lakshman.user_auth.dto.SignupRequest;
+import com.lakshman.user_auth.dto.VerifyGAuthRequest;
 import com.lakshman.user_auth.dto.VerifyOtpRequest;
 import com.lakshman.user_auth.entity.User;
 import com.lakshman.user_auth.repository.UserRepository;
@@ -29,6 +31,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Autowired
     private SessionService sessionService;
+
+    @Autowired
+    private GoogleAuthenticatorService googleAuthenticatorService;
 
     @Override
     @Transactional
@@ -123,15 +128,105 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public AuthResponse verifyLoginOtp(VerifyOtpRequest request, HttpServletRequest httpRequest) {
-        return null;
+        log.info("Verifying login OTP for email: {} and otpCode: {}", request.getEmail(), request.getOtpCode());
+        boolean verified = emailOtpService.verifyOtp(request.getEmail(), request.getOtpCode());
+
+        if (!verified) {
+            String msg = "Invalid or expired OTP";
+            log.error(msg);
+            throw new RuntimeException(msg);
+        }
+
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Check if GAuth is enabled
+        if (user.getGauthEnabled()) {
+            log.info("GAuth is enabled for user: {}", user.getId());
+            return new AuthResponse("Email OTP verified. Please verify Google Authenticator code.", null, true, user.getEmail());
+        }
+
+        // Create session and return token
+        String token = sessionService.createSession(user, httpRequest);
+        log.info("Session created for user: {}", user.getId());
+        return new AuthResponse("Login successful", token, false, null);
     }
 
+    @Override
     @Transactional
     public ApiResponse logout(String token) {
         log.info("Logout request: {}", token);
         sessionService.invalidateSession(token);
         log.info("Session invalidated: {}", token);
         return new ApiResponse("Logout successful", true);
+    }
+
+    @Transactional
+    @Override
+    public AuthResponse verifyGAuth(VerifyGAuthRequest request, HttpServletRequest httpRequest) {
+        log.info("Verifying GAuth for email: {} and code: {}", request.getEmail(), request.getCode());
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        log.info("User found: {}", user.getId());
+        int code;
+        try {
+            code = Integer.parseInt(request.getCode());
+        } catch (NumberFormatException e) {
+            log.error("Invalid verification code");
+            throw new RuntimeException("Invalid verification code");
+        }
+
+        boolean verified = googleAuthenticatorService.verifyCode(user.getId(), code);
+        log.info("GAuth verified: {}", verified);
+
+        if (!verified) {
+            log.error("Invalid Google Authenticator code");
+            throw new RuntimeException("Invalid Google Authenticator code");
+        }
+
+        // Create session and return token
+        String token = sessionService.createSession(user, httpRequest);
+        log.info("Session created for user: {}", user.getId());
+        return new AuthResponse("Login successful", token, false, null);
+    }
+
+    @Transactional
+    @Override
+    public GAuthSetupResponse setupGAuth(Long userId) {
+        log.info("Setting up GAuth for user: {}", userId);
+        String secretKey = googleAuthenticatorService.setupGoogleAuthenticator(userId);
+        log.info("Secret key generated: {}", secretKey);
+        String qrCodeUrl = googleAuthenticatorService.generateQRCodeUrl(userId, secretKey);
+        log.info("QR code URL generated: {}", qrCodeUrl);
+        return new GAuthSetupResponse(
+                "Scan the QR code with Google Authenticator app and verify with a code to enable 2FA",
+                secretKey,
+                qrCodeUrl
+        );
+    }
+
+    @Transactional
+    @Override
+    public ApiResponse enableGAuth(Long userId, String code) {
+        log.info("Enabling GAuth for user: {} and code: {}", userId, code);
+        int verificationCode;
+        try {
+            verificationCode = Integer.parseInt(code);
+        } catch (NumberFormatException e) {
+            log.error("Invalid verification code");
+            throw new RuntimeException("Invalid verification code");
+        }
+
+        boolean verified = googleAuthenticatorService.verifyAndEnableGAuth(userId, verificationCode);
+
+        if (!verified) {
+            log.error("Invalid Google Authenticator code");
+            throw new RuntimeException("Invalid Google Authenticator code");
+        }
+
+        log.info("GAuth enabled successfully");
+        return new ApiResponse("Google Authenticator enabled successfully", true);
     }
 
 }
