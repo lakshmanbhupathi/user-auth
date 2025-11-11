@@ -83,6 +83,7 @@ public class SessionServiceImpl implements SessionService {
         System.out.println("Cleaned up " + expiredSessions.size() + " expired sessions");
     }
 
+    //TODO move to async
     private void moveToHistory(Session session, final String reason) {
         log.info("Moving session to history: {}", session.getId());
         SessionHistory history = SessionHistory.builder()
