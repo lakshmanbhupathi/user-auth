@@ -161,6 +161,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         return new ApiResponse("Logout successful", true);
     }
 
+    // TODO 2FA into another service
     @Transactional
     @Override
     public AuthResponse verifyGAuth(VerifyGAuthRequest request, HttpServletRequest httpRequest) {
