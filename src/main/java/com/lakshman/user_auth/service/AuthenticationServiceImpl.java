@@ -1,11 +1,13 @@
 package com.lakshman.user_auth.service;
 
+import com.lakshman.user_auth.dto.ApiResponse;
 import com.lakshman.user_auth.dto.AuthResponse;
 import com.lakshman.user_auth.dto.LoginRequest;
 import com.lakshman.user_auth.dto.SignupRequest;
 import com.lakshman.user_auth.dto.VerifyOtpRequest;
 import com.lakshman.user_auth.entity.User;
 import com.lakshman.user_auth.repository.UserRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -24,6 +26,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Autowired
     private EmailOTPService emailOtpService;
+
+    @Autowired
+    private SessionService sessionService;
 
     @Override
     @Transactional
@@ -114,6 +119,19 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 null,
                 false,
                 user.getEmail());
+    }
+
+    @Override
+    public AuthResponse verifyLoginOtp(VerifyOtpRequest request, HttpServletRequest httpRequest) {
+        return null;
+    }
+
+    @Transactional
+    public ApiResponse logout(String token) {
+        log.info("Logout request: {}", token);
+        sessionService.invalidateSession(token);
+        log.info("Session invalidated: {}", token);
+        return new ApiResponse("Logout successful", true);
     }
 
 }
